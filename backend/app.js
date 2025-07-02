@@ -13,9 +13,8 @@ import corsOptions from "./config/corsOptions.js";
 import globalErrorHandler from "./errorHandler/ErrorController.js";
 import CustomError from "./errorHandler/CustomError.js";
 
-// Import company routes
-import companyRoutes from "./routes/companyRoutes.js";
-// import routes from "./routes/index.js"; // Existing commented out line
+// Import routes
+import routes from "./routes/index.js";
 
 const app = express();
 
@@ -44,12 +43,7 @@ app.get("/health", (req, res) => {
 });
 
 // 4. Main API routes
-// app.use("/api", routes); // Existing commented out line
-app.use("/api/companies", companyRoutes); // Added company routes
-
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+app.use("/api", routes); // Existing commented out line
 
 // 5. Catch-all route for undefined endpoints
 app.all("*", (req, res, next) => {

@@ -1,81 +1,102 @@
-import mongoose from 'mongoose';
-
-// Import referenced models to ensure they are registered with Mongoose,
-// although direct usage in this file is only for `ref`
-// import './UserModel.js'; // Not strictly necessary if User model is imported elsewhere and Mongoose knows about it
-// import './DepartmentModel.js'; // Same as above
+import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const companySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Company name is required'],
+      required: [true, "Company name is required"],
       trim: true,
-      unique: true, // Assuming company names should be unique
+      unique: true,
+      minLength: [3, "Company name must be at least 3 characters long"],
+      maxLength: [50, "Company name cannot exceed 50 characters"],
     },
     address: {
       type: String,
-      required: [true, 'Company address is required'],
+      required: [true, "Company address is required"],
       trim: true,
+      minLength: [3, "Address must be at least 3 characters long"],
+      maxLength: [100, "Address cannot exceed 100 characters"],
     },
     phone: {
       type: String,
-      required: [true, 'Company phone number is required'],
+      required: [true, "Company phone number is required"],
       trim: true,
-      // Add regex validation for phone number format if needed
-      // match: [/^\+[1-9]\d{1,14}$/, 'Please fill a valid phone number']
+      validate: {
+        validator: function (v) {
+          return /^(09\d{8}|\+2519\d{8})$/.test(v);
+        },
+        message:
+          "Invalid phone number. Must be either 09 followed by 8 digits (e.g., 09xxxxxxxx) or +2519 followed by 8 digits (e.g., +2519xxxxxxxx).",
+      },
     },
     email: {
       type: String,
-      required: [true, 'Company email is required'],
+      required: [true, "Company email is required"],
       unique: true,
       trim: true,
       lowercase: true,
-      match: [/.+\@.+\..+/, 'Please fill a valid email address'],
+      match: [/.+\@.+\..+/, "Invalid email address format"],
     },
     subscriptionStatus: {
       type: String,
-      enum: ['active', 'inactive', 'pending'],
-      default: 'pending',
-      required: true,
+      enum: ["active", "inactive", "pending"],
+      default: "pending",
+      required: [true, "Subscription status is required"],
     },
-    superAdmin: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-      // This will be set after the first user (SuperAdmin) is created.
-      // Adding 'required: true' here might be problematic for the initial company creation step
-      // before the SuperAdmin user record exists and is assigned.
-      // We will handle this linkage lógica in the user registration step.
-      // For now, it can be null/undefined initially.
-    },
+    superAdmins: [
+      // SuperAdmins can be more than one in a company
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     departments: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Department',
+        ref: "Department",
       },
     ],
-    // users array was removed as per discussion, users will be derived via departments.
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt timestamps
+    timestamps: true,
+    versionKey: false,
+    toJSON: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        delete ret.id;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        delete ret.id;
+        return ret;
+      },
+    },
   }
 );
 
-// Pre-save hook example (if needed later, e.g., for complex validation)
-// companySchema.pre('save', async function(next) {
-//   // Example: ensure superAdmin, if set, has 'SuperAdmin' role
-//   if (this.isModified('superAdmin') && this.superAdmin) {
-//     const User = mongoose.model('User'); // Or import User model
-//     const adminUser = await User.findById(this.superAdmin);
-//     if (!adminUser || adminUser.role !== 'SuperAdmin') {
-//       // This validation might be better handled at the controller level during assignment
-//       // to provide clearer user feedback.
-//       // return next(new Error('Assigned SuperAdmin does not have the SuperAdmin role.'));
-//     }
-//   }
-//   next();
-// });
+// Format name/address on save
+companySchema.pre("save", function (next) {
+  const capitalize = (str) =>
+    str.trim().replace(/\b\w/g, (char) => char.toUpperCase());
 
-const Company = mongoose.model('Company', companySchema);
+  if (this.isModified("name")) {
+    this.name = capitalize(this.name);
+  }
+
+  if (this.isModified("address")) {
+    this.address = capitalize(this.address);
+  }
+
+  next();
+});
+
+// Paginate plugin
+companySchema.plugin(mongoosePaginate);
+
+const Company = mongoose.model("Company", companySchema);
 
 export default Company;

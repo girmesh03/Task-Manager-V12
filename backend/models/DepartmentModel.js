@@ -1,56 +1,89 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const departmentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Department name is required'],
+      required: [true, "Department name is required"],
       trim: true,
-      unique: true, // Assuming department names are unique within a company context, will need compound index or app-level validation
+      unique: true,
+      minLength: [3, "Department name must be at least 3 characters long"],
+      maxLength: [50, "Department name cannot exceed 50 characters"],
+    },
+    description: {
+      type: String,
+      trim: true,
+      minLength: [10, "Description must be at least 10 characters long"],
+      maxLength: [300, "Description cannot exceed 300 characters"],
     },
     company: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Company',
-      required: [true, 'Company reference is required'],
+      ref: "Company",
+      required: [true, "Company reference is required"],
     },
-    users: [
+    members: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: "User",
       },
     ],
     managers: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // Users in this list should have 'Manager' or 'SuperAdmin' role
+        ref: "User", // Members in this list should have 'Manager' or 'SuperAdmin' role
       },
     ],
-    // We can add other fields like description, department-specific settings, etc., later.
   },
   {
-    timestamps: true, // Adds createdAt and updatedAt timestamps
+    timestamps: true,
+    versionKey: false,
+    toJSON: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        delete ret.id;
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        delete ret.id;
+        return ret;
+      },
+    },
   }
 );
 
-// Potential hook to ensure users listed in 'managers' also exist in 'users' and have the correct role,
-// or handle this at the application/controller level.
-// departmentSchema.pre('save', async function(next) {
-//   if (this.isModified('managers') || this.isModified('users')) {
-//     const User = mongoose.model('User'); // Or import User model
-//     // Validate managers are part of users and have correct roles
-//     for (const managerId of this.managers) {
-//       if (!this.users.includes(managerId)) {
-//         return next(new Error(`Manager with ID ${managerId} must also be in the department's user list.`));
-//       }
-//       const managerUser = await User.findById(managerId);
-//       if (!managerUser || !['Manager', 'SuperAdmin'].includes(managerUser.role)) {
-//         return next(new Error(`User with ID ${managerId} assigned as manager does not have 'Manager' or 'SuperAdmin' role.`));
-//       }
-//     }
-//   }
-//   next();
-// });
+// Virtuals
+departmentSchema.virtual("membersCount", {
+  ref: "User",
+  localField: "_id",
+  foreignField: "department",
+  count: true,
+});
 
-const Department = mongoose.model('Department', departmentSchema);
+// Format name/description on save
+departmentSchema.pre("save", function (next) {
+  const capitalize = (str) =>
+    str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+
+  if (this.isModified("name")) {
+    this.name = capitalize(this.name);
+  }
+
+  if (this.isModified("description") && this.description) {
+    this.description = this.description
+      .toLowerCase()
+      .replace(/(^\w|\.\s*\w)/g, (match) => match.toUpperCase());
+  }
+
+  next();
+});
+
+// Paginate plugin
+departmentSchema.plugin(mongoosePaginate);
+
+const Department = mongoose.model("Department", departmentSchema);
 
 export default Department;

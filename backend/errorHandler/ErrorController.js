@@ -1,4 +1,5 @@
 import CustomError from "./CustomError.js";
+import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const handleSpecificErrors = (error) => {
   // Handle MongoDB CastError (invalid ObjectId)
@@ -6,7 +7,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       `Invalid resource identifier: ${error.value}`,
       400,
-      "INVALID_ID"
+      ERROR_CODES.INVALID_ID
     );
   }
 
@@ -17,7 +18,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       `${field} '${value}' already exists. Please use a different value.`,
       409,
-      "DUPLICATE_FIELD"
+      ERROR_CODES.DUPLICATE_FIELD
     );
   }
 
@@ -27,7 +28,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       `Validation failed: ${errors.join(". ")}`,
       422,
-      "VALIDATION_FAILED"
+      ERROR_CODES.VALIDATION_FAILED
     );
   }
 
@@ -36,7 +37,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       "Invalid authentication token. Please log in again.",
       401,
-      "INVALID_TOKEN"
+      ERROR_CODES.INVALID_TOKEN
     );
   }
 
@@ -45,7 +46,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       "Your authentication token has expired. Please log in again.",
       401,
-      "TOKEN_EXPIRED"
+      ERROR_CODES.TOKEN_EXPIRED
     );
   }
 
@@ -54,7 +55,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       "Too many requests. Please try again later.",
       429,
-      "RATE_LIMITED"
+      ERROR_CODES.RATE_LIMITED
     );
   }
 
