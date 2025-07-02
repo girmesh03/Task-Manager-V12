@@ -28,7 +28,7 @@ const handleSpecificErrors = (error) => {
     return new CustomError(
       `Validation failed: ${errors.join(". ")}`,
       422,
-      ERROR_CODES.VALIDATION_FAILED
+      ERROR_CODES.VALIDATION_ERROR // Changed from VALIDATION_FAILED
     );
   }
 

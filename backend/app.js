@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import corsOptions from "./config/corsOptions.js";
 import globalErrorHandler from "./errorHandler/ErrorController.js";
 import CustomError from "./errorHandler/CustomError.js";
+import ERROR_CODES from "./constants/ErrorCodes.js"; // Added for clarity
 
 // Import routes
 import routes from "./routes/index.js";
@@ -48,7 +49,7 @@ app.use("/api", routes); // Existing commented out line
 // 5. Catch-all route for undefined endpoints
 app.all("*", (req, res, next) => {
   const errorMessage = `Resource not found. The requested URL ${req.originalUrl} was not found on this server.`;
-  next(new CustomError(errorMessage, 404, "ROUTE-404"));
+  next(new CustomError(errorMessage, 404, ERROR_CODES.ROUTE_NOT_FOUND));
 });
 
 // 6. Global error handler

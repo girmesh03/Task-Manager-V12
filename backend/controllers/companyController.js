@@ -10,16 +10,30 @@ const createCompany = asyncHandler(async (req, res, next) => {
   const { name, address, phone, email } = req.body;
 
   try {
-    // Check if company with the same email, name, or phone already exists
-    const companyExistsBy = await Company.findOne({
-      $or: [{ email }, { name }, { phone }],
-    });
-
-    // Validate uniqueness
-    if (companyExistsBy) {
+    // Check for existing company with the same email, name, or phone
+    let existingCompany = await Company.findOne({ email });
+    if (existingCompany) {
       throw new CustomError(
-        "A company with this email already exists.",
-        400,
+        `A company with email '${email}' already exists.`,
+        409, // 409 Conflict is more appropriate here
+        ERROR_CODES.RESOURCE_EXISTS
+      );
+    }
+
+    existingCompany = await Company.findOne({ name });
+    if (existingCompany) {
+      throw new CustomError(
+        `A company with name '${name}' already exists.`,
+        409,
+        ERROR_CODES.RESOURCE_EXISTS
+      );
+    }
+
+    existingCompany = await Company.findOne({ phone });
+    if (existingCompany) {
+      throw new CustomError(
+        `A company with phone '${phone}' already exists.`,
+        409,
         ERROR_CODES.RESOURCE_EXISTS
       );
     }
