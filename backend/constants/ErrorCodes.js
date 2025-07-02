@@ -1,4 +1,4 @@
-// backend/constants/ErrorCodes.js
+// refactor/code-polish-updates
 const ERROR_CODES = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
   RESOURCE_EXISTS: "RESOURCE_EXISTS",
@@ -10,7 +10,12 @@ const ERROR_CODES = {
   TOKEN_EXPIRED: "TOKEN_EXPIRED",
   RATE_LIMITED: "RATE_LIMITED",
   ROUTE_NOT_FOUND: "ROUTE_NOT_FOUND",
-  // More generic codes here
+  RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",   // Added for login
+  ACCOUNT_INACTIVE: "ACCOUNT_INACTIVE",
+  ACCOUNT_NOT_VERIFIED: "ACCOUNT_NOT_VERIFIED",
+  UNAUTHORIZED_ACCESS: "UNAUTHORIZED_ACCESS", // Added for auth middleware
+  // Add more generic codes as needed
 };
 
 export default ERROR_CODES;
