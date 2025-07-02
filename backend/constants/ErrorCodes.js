@@ -5,13 +5,15 @@ const ERROR_CODES = {
   SERVER_ERROR: "SERVER_ERROR",
   INVALID_ID: "INVALID_ID",
   DUPLICATE_FIELD: "DUPLICATE_FIELD",
-  // VALIDATION_FAILED is duplicated, VALIDATION_ERROR is more generic for all validation issues.
-  // Keeping VALIDATION_ERROR and removing the specific VALIDATION_FAILED for now.
-  // If more granular validation error types are needed, they can be added.
   INVALID_TOKEN: "INVALID_TOKEN",
   TOKEN_EXPIRED: "TOKEN_EXPIRED",
   RATE_LIMITED: "RATE_LIMITED",
-  ROUTE_NOT_FOUND: "ROUTE_NOT_FOUND", // Added for consistency
+  ROUTE_NOT_FOUND: "ROUTE_NOT_FOUND",
+  RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",   // Added for login
+  ACCOUNT_INACTIVE: "ACCOUNT_INACTIVE",
+  ACCOUNT_NOT_VERIFIED: "ACCOUNT_NOT_VERIFIED",
+  UNAUTHORIZED_ACCESS: "UNAUTHORIZED_ACCESS", // Added for auth middleware
   // Add more generic codes as needed
 };
 

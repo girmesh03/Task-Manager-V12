@@ -7,7 +7,7 @@ const departmentSchema = new mongoose.Schema(
       type: String,
       required: [true, "Department name is required"],
       trim: true,
-      unique: true,
+      // unique: true, // Removed global uniqueness here
       minLength: [3, "Department name must be at least 3 characters long"],
       maxLength: [50, "Department name cannot exceed 50 characters"],
     },
@@ -83,6 +83,9 @@ departmentSchema.pre("save", function (next) {
 
 // Paginate plugin
 departmentSchema.plugin(mongoosePaginate);
+
+// Compound unique index for name per company
+departmentSchema.index({ name: 1, company: 1 }, { unique: true });
 
 const Department = mongoose.model("Department", departmentSchema);
 

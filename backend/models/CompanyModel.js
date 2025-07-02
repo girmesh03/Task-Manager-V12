@@ -38,12 +38,7 @@ const companySchema = new mongoose.Schema(
       lowercase: true,
       match: [/.+\@.+\..+/, "Invalid email address format"],
     },
-    subscriptionStatus: {
-      type: String,
-      enum: ["active", "inactive", "pending"],
-      default: "pending",
-      required: [true, "Subscription status is required"],
-    },
+    // subscriptionStatus field removed as per new requirement
     superAdmins: [
       // SuperAdmins can be more than one in a company
       {
