@@ -1,3 +1,4 @@
+// backend/app.js
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -12,7 +13,7 @@ import mongoose from "mongoose";
 import corsOptions from "./config/corsOptions.js";
 import globalErrorHandler from "./errorHandler/ErrorController.js";
 import CustomError from "./errorHandler/CustomError.js";
-import ERROR_CODES from "./constants/ErrorCodes.js"; // Added for clarity
+import ERROR_CODES from "./constants/ErrorCodes.js";
 
 // Import routes
 import routes from "./routes/index.js";

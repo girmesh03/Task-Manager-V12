@@ -1,3 +1,4 @@
+// backend/routes/companyRoutes.js
 import express from "express";
 import { createSubscription } from "../controllers/companyController.js"; // Updated import to createSubscription
 

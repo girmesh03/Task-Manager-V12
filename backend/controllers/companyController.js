@@ -1,3 +1,4 @@
+// backend/controllers/companyController.js
 import mongoose from "mongoose";
 import asyncHandler from "express-async-handler";
 import Company from "../models/CompanyModel.js";

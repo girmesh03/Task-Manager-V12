@@ -1,3 +1,4 @@
+// refactor/code-polish-updates
 const ERROR_CODES = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
   RESOURCE_EXISTS: "RESOURCE_EXISTS",

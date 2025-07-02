@@ -1,3 +1,4 @@
+// backend/models/UserModel.js
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import mongoosePaginate from "mongoose-paginate-v2";
