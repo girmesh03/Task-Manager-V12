@@ -1,9 +1,10 @@
+// backend/models/UserModel.js
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import mongoosePaginate from "mongoose-paginate-v2";
 import crypto from "crypto";
-import CustomError from "../errorHandler/CustomError";
-import ERROR_CODES from "../constants/ErrorCodes";
+import CustomError from "../errorHandler/CustomError.js";
+import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const userSchema = new mongoose.Schema(
   {

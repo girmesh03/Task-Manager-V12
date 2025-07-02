@@ -1,3 +1,4 @@
+// backend/config/corsOptions.js
 import allowedOrigins from "./allowedOrigins.js";
 import CustomError from "../errorHandler/CustomError.js";
 const corsOptions = {
