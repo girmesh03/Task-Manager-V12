@@ -8,17 +8,12 @@ import CustomError from "../errorHandler/CustomError.js";
 import ERROR_CODES from "../constants/ErrorCodes.js";
 
 // @desc    Handles company subscription:
-// @desc   creates Company, initial Super Admin, and their specified Department.
+// @desc    creates Company, initial Super Admin,
+// @desc    and their specified Department.
 // @route   POST /api/companies/subscribe
 // @access  Public
 const createSubscription = asyncHandler(async (req, res, next) => {
-  // Expecting structure: { companyData: {name, address, ...}, userData: {firstName, ..., departmentName} }
-  // Expecting structure: { companyData: {name, address, ...}, userData: {firstName, ..., departmentName} }
   const { companyData, userData } = req.body;
-
-  // Explicit initial validation removed, relying on Mongoose schema validation.
-
-  // Extracting for easier use, matching previous direct destructuring style for the core logic
   const { name, address, phone, email } = companyData || {};
   const {
     adminFirstName,
@@ -27,45 +22,22 @@ const createSubscription = asyncHandler(async (req, res, next) => {
     adminPassword,
     adminPosition,
     departmentName,
-  } = userData || {}; // Add default empty object to prevent TypeError if userData is missing
+  } = userData || {};
 
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // Company Uniqueness Checks
-    let existingCompany = await Company.findOne({
-      $or: [{ email }, { name }, { phone }],
-    }).session(session);
-    if (existingCompany) {
-      let conflictField = "detail";
-      if (existingCompany.email === email) conflictField = "email";
-      else if (existingCompany.name === name) conflictField = "name";
-      else if (existingCompany.phone === phone) conflictField = "phone";
-      throw new CustomError(
-        `A company with this ${conflictField} already exists.`,
-        409,
-        ERROR_CODES.RESOURCE_EXISTS
-      );
+    // Prepare company phone number
+    let formattedPhone = phone;
+    if (formattedPhone.startsWith("09")) {
+      formattedPhone = phone.replace("09", "+2519");
     }
 
-    // User Email Uniqueness Check
-    const existingUser = await User.findOne({ email: adminEmail }).session(
-      session
-    );
-    if (existingUser) {
-      throw new CustomError(
-        `A user with email '${adminEmail}' already exists.`,
-        409,
-        ERROR_CODES.RESOURCE_EXISTS
-      );
-    }
-
-    // Create Company
     const newCompany = new Company({
       name,
       address,
-      phone,
+      phone: formattedPhone,
       email,
       superAdmins: [],
       departments: [],
@@ -75,10 +47,9 @@ const createSubscription = asyncHandler(async (req, res, next) => {
     // Create User-Specified Department
     const userDepartment = new Department({
       name: departmentName, // Use departmentName from userData
-      description: `Main department for ${savedCompany.name} - ${departmentName}`, // Default description
+      description: `department of ${departmentName}`,
       company: savedCompany._id,
       members: [],
-      managers: [],
     });
     const savedUserDepartment = await userDepartment.save({ session });
 
@@ -96,15 +67,22 @@ const createSubscription = asyncHandler(async (req, res, next) => {
     });
     const savedSuperAdmin = await superAdmin.save({ session });
 
-    // Link Entities
+    // Link the new super admin to the new company
     savedCompany.superAdmins.push(savedSuperAdmin._id);
-    savedCompany.departments.push(savedUserDepartment._id); // Link company to the new department
+
+    // Link the new department to the new company
+    savedCompany.departments.push(savedUserDepartment._id);
+
+    // Save the updated company
     await savedCompany.save({ session });
 
-    savedUserDepartment.members.push(savedSuperAdmin._id); // Add admin to department members
-    savedUserDepartment.managers.push(savedSuperAdmin._id); // Add admin to department managers
+    // Add super admin to department members
+    savedUserDepartment.members.push(savedSuperAdmin._id);
+
+    // Save the updated department
     await savedUserDepartment.save({ session });
 
+    // Commit the transaction
     await session.commitTransaction();
 
     res.status(201).json({
@@ -112,20 +90,7 @@ const createSubscription = asyncHandler(async (req, res, next) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    // Pass mongoose validation errors directly to global error handler
-    if (error.name === "ValidationError" || error instanceof CustomError) {
-      next(error);
-    } else {
-      // For other unexpected errors
-      console.error("Create Subscription Error:", error);
-      next(
-        new CustomError(
-          error.message || "Failed to create subscription.",
-          500,
-          ERROR_CODES.OPERATION_FAILED
-        )
-      );
-    }
+    next(error);
   } finally {
     session.endSession();
   }

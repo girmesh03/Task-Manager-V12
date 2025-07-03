@@ -8,20 +8,6 @@ import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const userSchema = new mongoose.Schema(
   {
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      trim: true,
-      lowercase: true,
-      match: [/.+\@.+\..+/, "Please fill a valid email address"],
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"], // Example validation
-      select: false,
-    },
     firstName: {
       type: String,
       required: [true, "First name is required"],
@@ -31,6 +17,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Last name is required"],
       trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      trim: true,
+      lowercase: true,
+      match: [/.+\@.+\..+/, "Invalid email address format"],
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters long"],
+      select: false,
     },
     role: {
       type: String,

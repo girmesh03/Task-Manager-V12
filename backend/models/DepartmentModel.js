@@ -8,13 +8,13 @@ const departmentSchema = new mongoose.Schema(
       type: String,
       required: [true, "Department name is required"],
       trim: true,
-      minLength: [3, "Department name must be at least 3 characters long"],
+      unique: true,
+      minLength: [2, "Department name must be at least 3 characters long"],
       maxLength: [50, "Department name cannot exceed 50 characters"],
     },
     description: {
       type: String,
       trim: true,
-      minLength: [10, "Description must be at least 10 characters long"],
       maxLength: [300, "Description cannot exceed 300 characters"],
     },
     company: {
@@ -26,12 +26,6 @@ const departmentSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-      },
-    ],
-    managers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Members in this list should have 'Manager' or 'SuperAdmin' role
       },
     ],
   },
@@ -74,8 +68,9 @@ departmentSchema.pre("save", function (next) {
 
   if (this.isModified("description") && this.description) {
     this.description = this.description
+      .trim()
       .toLowerCase()
-      .replace(/(^\w|\.\s*\w)/g, (match) => match.toUpperCase());
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
   next();
@@ -83,9 +78,6 @@ departmentSchema.pre("save", function (next) {
 
 // Paginate plugin
 departmentSchema.plugin(mongoosePaginate);
-
-// Compound unique index for name per company
-departmentSchema.index({ name: 1, company: 1 }, { unique: true });
 
 const Department = mongoose.model("Department", departmentSchema);
 
