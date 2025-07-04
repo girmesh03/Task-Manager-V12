@@ -9,7 +9,7 @@ const departmentSchema = new mongoose.Schema(
       required: [true, "Department name is required"],
       trim: true,
       unique: true,
-      minLength: [2, "Department name must be at least 3 characters long"],
+      minLength: [2, "Department name must be at least 2 characters long"],
       maxLength: [50, "Department name cannot exceed 50 characters"],
     },
     description: {
