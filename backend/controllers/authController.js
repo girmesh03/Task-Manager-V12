@@ -64,6 +64,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
     // Remove sensitive data before sending response
     const userResponse = user.toObject();
     delete userResponse.password;
+    delete userResponse.refreshToken;
 
     // Send response
     res.status(200).json(userResponse);
