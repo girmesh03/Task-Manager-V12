@@ -77,7 +77,7 @@ const loginUser = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/auth/logout
 // @access  Private
 const logoutUser = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.cookies;
+  const refreshToken = req.cookies?.refresh_token;
   if (refreshToken) {
     const user = await User.findOne({ refreshToken });
     if (user) {
@@ -105,7 +105,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/refresh-token
 // @access  Private
 const getRefreshToken = asyncHandler(async (req, res, next) => {
-  const currentRefreshToken = req.cookies.refresh_token;
+  const currentRefreshToken = req.cookies?.refresh_token;
 
   if (!currentRefreshToken) {
     return next(
