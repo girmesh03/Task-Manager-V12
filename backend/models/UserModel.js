@@ -3,8 +3,6 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import mongoosePaginate from "mongoose-paginate-v2";
 import crypto from "crypto";
-import CustomError from "../errorHandler/CustomError.js";
-import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -71,6 +69,7 @@ const userSchema = new mongoose.Schema(
     verificationTokenExpiry: { type: Date, select: false },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpiry: { type: Date, select: false },
+    refreshToken: { type: String, select: false },
   },
   {
     timestamps: true,
@@ -129,9 +128,7 @@ userSchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
-    next(
-      new CustomError("Password hashing failed", 500, ERROR_CODES.SERVER_ERROR)
-    );
+    next(error);
   }
 });
 
