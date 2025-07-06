@@ -24,8 +24,5 @@ const LoadingFallback = ({ message = "Loading..." }) => {
   );
 };
 
-LoadingFallback.propTypes = {
-  message: PropTypes.string,
-};
-
 export default LoadingFallback;
+
