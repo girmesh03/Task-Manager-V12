@@ -1,20 +1,29 @@
-import { StrictMode } from "react";
+import { StrictMode, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-// Root
+// Components
+import LoadingFallback from "./components/LoadingFallback.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
+
+// Root App - not lazy loaded as it's always needed
 import App from "./App.jsx";
 
-// Layouts
-import AuthLayout from "./layouts/AuthLayout.jsx";
-import DashboardLayout from "./layouts/DashboardLayout.jsx";
+// Lazy load all route components
+const AuthLayout = lazy(() => import("./layouts/AuthLayout.jsx"));
+const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.jsx"));
+const Home = lazy(() => import("./pages/Home.jsx"));
+const Login = lazy(() => import("./pages/Login.jsx"));
+const Statistics = lazy(() => import("./pages/Statistics.jsx"));
 
-// Public Routes
-import Home from "./pages/Home.jsx";
-import Login from "./pages/Login.jsx";
-
-// Protected Routes
-import Statistics from "./pages/Statistics.jsx";
+// Wrapper component for Suspense boundaries
+const SuspenseWrapper = ({ children, fallbackMessage }) => (
+  <Suspense fallback={<LoadingFallback message={fallbackMessage} />}>
+    <ErrorBoundary fallbackMessage="Failed to load this section">
+      {children}
+    </ErrorBoundary>
+  </Suspense>
+);
 
 const router = createBrowserRouter([
   {
@@ -22,25 +31,45 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        element: <AuthLayout />,
+        element: (
+          <SuspenseWrapper fallbackMessage="Loading authentication...">
+            <AuthLayout />
+          </SuspenseWrapper>
+        ),
         children: [
           {
             path: "",
-            element: <Home />,
+            element: (
+              <SuspenseWrapper fallbackMessage="Loading home page...">
+                <Home />
+              </SuspenseWrapper>
+            ),
           },
           {
             path: "login",
-            element: <Login />,
+            element: (
+              <SuspenseWrapper fallbackMessage="Loading login page...">
+                <Login />
+              </SuspenseWrapper>
+            ),
           },
         ],
       },
       {
         path: "",
-        element: <DashboardLayout />,
+        element: (
+          <SuspenseWrapper fallbackMessage="Loading dashboard...">
+            <DashboardLayout />
+          </SuspenseWrapper>
+        ),
         children: [
           {
             path: "statistics",
-            element: <Statistics />,
+            element: (
+              <SuspenseWrapper fallbackMessage="Loading statistics...">
+                <Statistics />
+              </SuspenseWrapper>
+            ),
           },
         ],
       },
@@ -50,6 +79,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ErrorBoundary fallbackMessage="Failed to initialize the application">
+      <RouterProvider router={router} />
+    </ErrorBoundary>
   </StrictMode>
 );
