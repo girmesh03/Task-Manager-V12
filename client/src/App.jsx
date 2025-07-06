@@ -27,6 +27,7 @@ const DashboardLayout = lazy(() => import("./layouts/DashboardLayout"));
 // Public routes
 const Home = lazy(() => import("./pages/Home"));
 const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 
@@ -75,6 +76,18 @@ const router = createBrowserRouter([
                 errorTitle="Login Page Error"
               >
                 <Login />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: "register",
+            element: (
+              <SuspenseWrapper
+                fallbackMessage="Loading registration page..."
+                errorMessage="Failed to load registration page"
+                errorTitle="Registration Page Error"
+              >
+                <Register />
               </SuspenseWrapper>
             ),
           },
