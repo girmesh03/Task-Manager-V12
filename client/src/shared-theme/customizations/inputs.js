@@ -389,6 +389,12 @@ export const inputsCustomizations = {
     styleOverrides: {
       input: {
         padding: 0,
+        "&:-webkit-autofill, &:-webkit-autofill:hover, &:-webkit-autofill:focus":
+          {
+            WebkitBoxShadow: `inset 0 0 0px 1000px var(--template-palette-background-default) !important`,
+            WebkitTextFillColor: `var(--template-palette-text-primary) !important`,
+            caretColor: `var(--template-palette-text-primary) !important`,
+          },
       },
       root: ({ theme }) => ({
         padding: "8px 12px",

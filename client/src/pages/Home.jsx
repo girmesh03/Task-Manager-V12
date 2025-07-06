@@ -1,6 +1,12 @@
+import HeroSection from "../components/auth/HeroSection";
+
 const Home = () => {
   console.log("home");
-  return <div>Home</div>;
+  return (
+    <>
+      <HeroSection />
+    </>
+  );
 };
 
 export default Home;

@@ -1,6 +1,9 @@
-const Statistics = () => {
-  console.log("statistics");
-  return <div>Statistics</div>;
-};
 
-export default Statistics;
+const Statistics = () => {
+  console.log("Statistics");
+  return (
+    <div>Statistics</div>
+  )
+}
+
+export default Statistics
