@@ -1,46 +1,48 @@
-import { StrictMode, lazy, Suspense } from "react";
+import { StrictMode, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // Components
-import LoadingFallback from "./components/LoadingFallback.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import SuspenseWrapper from "./components/SuspenseWrapper.jsx";
+import RouteError from "./components/RouteError.jsx";
 
 // Root App - not lazy loaded as it's always needed
 import App from "./App.jsx";
 
-// Lazy load all route components
+// Lazy load all route components for optimal performance
 const AuthLayout = lazy(() => import("./layouts/AuthLayout.jsx"));
 const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.jsx"));
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Login = lazy(() => import("./pages/Login.jsx"));
 const Statistics = lazy(() => import("./pages/Statistics.jsx"));
 
-// Wrapper component for Suspense boundaries
-const SuspenseWrapper = ({ children, fallbackMessage }) => (
-  <Suspense fallback={<LoadingFallback message={fallbackMessage} />}>
-    <ErrorBoundary fallbackMessage="Failed to load this section">
-      {children}
-    </ErrorBoundary>
-  </Suspense>
-);
-
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <RouteError />, // Global route error handler
     children: [
       {
         element: (
-          <SuspenseWrapper fallbackMessage="Loading authentication...">
+          <SuspenseWrapper 
+            fallbackMessage="Loading authentication..."
+            errorMessage="Failed to load authentication system"
+            errorTitle="Authentication Error"
+          >
             <AuthLayout />
           </SuspenseWrapper>
         ),
+        errorElement: <RouteError />, // Auth-specific error handler
         children: [
           {
             path: "",
             element: (
-              <SuspenseWrapper fallbackMessage="Loading home page...">
+              <SuspenseWrapper 
+                fallbackMessage="Loading home page..."
+                errorMessage="Failed to load home page"
+                errorTitle="Home Page Error"
+              >
                 <Home />
               </SuspenseWrapper>
             ),
@@ -48,7 +50,11 @@ const router = createBrowserRouter([
           {
             path: "login",
             element: (
-              <SuspenseWrapper fallbackMessage="Loading login page...">
+              <SuspenseWrapper 
+                fallbackMessage="Loading login page..."
+                errorMessage="Failed to load login page"
+                errorTitle="Login Page Error"
+              >
                 <Login />
               </SuspenseWrapper>
             ),
@@ -56,17 +62,26 @@ const router = createBrowserRouter([
         ],
       },
       {
-        path: "",
+        path: "dashboard",
         element: (
-          <SuspenseWrapper fallbackMessage="Loading dashboard...">
+          <SuspenseWrapper 
+            fallbackMessage="Loading dashboard..."
+            errorMessage="Failed to load dashboard"
+            errorTitle="Dashboard Error"
+          >
             <DashboardLayout />
           </SuspenseWrapper>
         ),
+        errorElement: <RouteError />, // Dashboard-specific error handler
         children: [
           {
             path: "statistics",
             element: (
-              <SuspenseWrapper fallbackMessage="Loading statistics...">
+              <SuspenseWrapper 
+                fallbackMessage="Loading statistics..."
+                errorMessage="Failed to load statistics page"
+                errorTitle="Statistics Error"
+              >
                 <Statistics />
               </SuspenseWrapper>
             ),
@@ -79,7 +94,10 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ErrorBoundary fallbackMessage="Failed to initialize the application">
+    <ErrorBoundary 
+      fallbackMessage="Failed to initialize the application. Please refresh the page."
+      title="Application Error"
+    >
       <RouterProvider router={router} />
     </ErrorBoundary>
   </StrictMode>
