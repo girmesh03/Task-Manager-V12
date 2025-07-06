@@ -1,4 +1,8 @@
-import { Box, CircularProgress, Typography } from "@mui/material";
+import PropTypes from "prop-types";
+
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 const LoadingFallback = ({ message = "Loading..." }) => {
   return (
@@ -21,3 +25,4 @@ const LoadingFallback = ({ message = "Loading..." }) => {
 };
 
 export default LoadingFallback;
+
