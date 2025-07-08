@@ -1,7 +1,10 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
 
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Grid from "@mui/material/Grid";
@@ -16,25 +19,46 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 import SettingsSuggestRoundedIcon from "@mui/icons-material/SettingsSuggestRounded";
 import ThumbUpAltRoundedIcon from "@mui/icons-material/ThumbUpAltRounded";
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 
 import MuiTextField from "../components/MuiTextField";
 import { SitemarkIcon } from "../components/CustomIcons";
 
+import { makeRequest } from "../api/apiRequest";
+
 const Login = () => {
   console.log("Login");
   const navigate = useNavigate();
-  const { handleSubmit, control } = useForm({
+  const fromPath = location.state?.from?.pathname || "/dashboard/statistics";
+
+  const {
+    handleSubmit,
+    control,
+    reset,
+    formState: { isSubmitting },
+  } = useForm({
     defaultValues: { email: "", password: "" },
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const togglePassword = () => setShowPassword((prev) => !prev);
-
-  const onSubmit = (formData) => {
-    // Login logic here
-    console.log(formData);
+  const onSubmit = async (formData) => {
+    try {
+      const { data } = await makeRequest.post("/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
+      console.log("Login Response:", data);
+      toast.success("Login successful!");
+      reset();
+      navigate(fromPath, { replace: true });
+    } catch (error) {
+      const errMsg = error?.data?.message || error?.message || "Login failed";
+      const errorType = error?.data?.errorCode || error?.errorCode || "UNKNOWN";
+      toast.error(errMsg);
+      if (errorType === "AUTH_VERIFY") {
+        navigate("/verify-email");
+      }
+    }
   };
 
   const features = useMemo(
@@ -125,11 +149,9 @@ const Login = () => {
                   message: "Invalid email address",
                 },
               }}
-              formLabel="Email"
+              label="Email"
               placeholder="xyz@example.com"
               autoComplete="email"
-              formControlProps={{ margin: "dense" }}
-              formLabelProps={{ required: true }}
               slotProps={{
                 input: {
                   startAdornment: (
@@ -151,12 +173,10 @@ const Login = () => {
                   message: "Password must be at least 6 characters",
                 },
               }}
-              formLabel="Password"
+              label="Password"
               placeholder="••••••"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
-              formControlProps={{ margin: "dense" }}
-              formLabelProps={{ required: true }}
               slotProps={{
                 input: {
                   startAdornment: (
@@ -168,9 +188,9 @@ const Login = () => {
                     <InputAdornment
                       position="end"
                       size="small"
-                      // sx={{ cursor: isLoading ? "default" : "pointer" }}
+                      sx={{ cursor: isSubmitting ? "default" : "pointer" }}
                       onClick={togglePassword}
-                      // disabled={isLoading}
+                      disabled={isSubmitting}
                     >
                       {showPassword ? (
                         <VisibilityOffIcon fontSize="small" />
@@ -189,16 +209,15 @@ const Login = () => {
               variant="contained"
               color="secondary"
               size="small"
-              // disabled={isLoading}
-              // loading={isLoading}
+              disabled={isSubmitting}
+              loading={isSubmitting}
               loadingIndicator={
                 <CircularProgress size={20} sx={{ color: "white" }} />
               }
               loadingPosition="start"
               sx={{ mt: 2 }}
             >
-              {/* {isLoading ? "Logging In..." : "Login"} */}
-              Login
+              {isSubmitting ? "Logging In..." : "Login"}
             </Button>
           </CardContent>
           <Button
@@ -206,7 +225,7 @@ const Login = () => {
             color="secondary"
             size="small"
             fullWidth
-            // disabled={isLoading}
+            disabled={isSubmitting}
             onClick={() => navigate("/forgot-password")}
             sx={{ mt: 2 }}
           >

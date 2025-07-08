@@ -38,7 +38,36 @@ const companySchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      match: [/.+\@.+\..+/, "Invalid email address format"],
+      match: [
+        /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+        "Invalid email address format",
+      ],
+    },
+    size: {
+      type: String,
+      required: [true, "Company size is required"],
+      enum: [
+        "1-10 Employees",
+        "11-50 Employees",
+        "51-200 Employees",
+        "201-500 Employees",
+        "500+ Employees",
+      ],
+    },
+    industry: {
+      type: String,
+      required: [true, "Company industry is required"],
+      enum: [
+        "Hospitality",
+        "Technology",
+        "Healthcare",
+        "Finance",
+        "Education",
+        "Retail",
+        "Manufacturing",
+        "Consulting",
+        "Other",
+      ],
     },
     superAdmins: [
       {

@@ -116,7 +116,7 @@ class ErrorBoundary extends React.Component {
                   <Box
                     sx={{
                       p: 2,
-                      backgroundColor: "grey.100",
+                      // backgroundColor: "grey.100",
                       borderRadius: 1,
                       border: "1px solid",
                       borderColor: "grey.300",

@@ -14,7 +14,7 @@ const AuthLayout = () => {
   const navigate = useNavigate();
   return (
     <Container
-      maxWidth="lg"
+      maxWidth="xl"
       disableGutters
       sx={{ display: "flex", flexDirection: "column", height: "100%" }}
     >

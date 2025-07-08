@@ -83,9 +83,9 @@ const router = createBrowserRouter([
             path: "register",
             element: (
               <SuspenseWrapper
-                fallbackMessage="Loading registration page..."
-                errorMessage="Failed to load registration page"
-                errorTitle="Registration Page Error"
+                fallbackMessage="Loading register page..."
+                errorMessage="Failed to load register page"
+                errorTitle="Register Page Error"
               >
                 <Register />
               </SuspenseWrapper>

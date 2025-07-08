@@ -72,8 +72,7 @@ const HeroSection = () => {
           color="text.secondary"
           sx={{ textAlign: "center" }}
         >
-          By clicking "Get Started" you agree to our&nbsp;Terms &
-          Conditions
+          By clicking "Get Started" you agree to our&nbsp;Terms & Conditions
         </Typography>
       </Stack>
     </Container>
