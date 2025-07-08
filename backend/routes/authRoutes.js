@@ -2,14 +2,23 @@
 import express from "express";
 
 import {
+  registerUser,
   loginUser,
   logoutUser,
   getRefreshToken,
 } from "../controllers/authController.js";
-import { validateLogin } from "../middlewares/validators/authValidator.js";
+import {
+  validateRegister,
+  validateLogin,
+} from "../middlewares/validators/authValidator.js";
 import { verifyJWT } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+
+// @route   POST /api/auth/register
+// @desc    Register a new user and create a company
+// @access  Public
+router.post("/register", validateRegister, registerUser);
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user and get token

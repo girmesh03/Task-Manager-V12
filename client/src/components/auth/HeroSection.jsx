@@ -63,7 +63,7 @@ const HeroSection = () => {
           color="secondary"
           size="small"
           sx={{ minWidth: "fit-content" }}
-          onClick={() => navigate("/subscribe")}
+          onClick={() => navigate("/register")}
         >
           Get Started
         </Button>
@@ -72,8 +72,7 @@ const HeroSection = () => {
           color="text.secondary"
           sx={{ textAlign: "center" }}
         >
-          By clicking &quot;Get Started&quot; you agree to our&nbsp;Terms &
-          Conditions
+          By clicking "Get Started" you agree to our&nbsp;Terms & Conditions
         </Typography>
       </Stack>
     </Container>

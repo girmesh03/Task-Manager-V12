@@ -1,7 +1,14 @@
 import { Outlet } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+
+import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 
 const RootLayout = () => {
+  console.log("RootLayout rendered");
+  const theme = useTheme();
+  const muiTheme = theme.palette.mode;
+
   return (
     <Box
       sx={(theme) => ({
@@ -27,6 +34,23 @@ const RootLayout = () => {
       })}
     >
       <Outlet />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={muiTheme === "system" ? "dark" : "light"}
+        toastStyle={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: "0.875rem",
+          borderRadius: "4px",
+        }}
+      />
     </Box>
   );
 };
