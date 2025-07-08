@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import CustomError from "../errorHandler/CustomError.js"; // Corrected path
-import MaterialUsageModel from "./schemas/MaterialUsageModel.js";
+import MaterialUsageSchema from "./MaterialUsageModel.js"; // Updated path
 
 const routineTaskSchema = new mongoose.Schema(
   {
@@ -81,7 +81,7 @@ const routineTaskSchema = new mongoose.Schema(
       },
     ],
     materialsUsed: {
-      type: [MaterialUsageModel],
+      type: [MaterialUsageSchema],
       default: [],
     },
   },

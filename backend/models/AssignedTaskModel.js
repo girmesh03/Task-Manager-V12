@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Task from "./TaskModel.js";
 import MaterialUsageModel from "./schemas/MaterialUsageModel.js";
+import MaterialUsageSchema from "./MaterialUsageModel.js"; // Updated path
 
 const assignedTaskSchema = new mongoose.Schema(
   {
@@ -38,7 +39,7 @@ const assignedTaskSchema = new mongoose.Schema(
       },
     },
     materialsUsed: {
-      type: [MaterialUsageModel],
+      type: [MaterialUsageSchema],
       default: [],
     },
   },
