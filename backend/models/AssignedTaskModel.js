@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import Task from "./TaskModel.js";
-import MaterialUsageModel from "./schemas/MaterialUsageModel.js";
-import MaterialUsageSchema from "./MaterialUsageModel.js"; // Updated path
+import MaterialUsageSchema from "./MaterialUsageModel.js";
 
 const assignedTaskSchema = new mongoose.Schema(
   {

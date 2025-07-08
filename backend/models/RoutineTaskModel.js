@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
-import CustomError from "../errorHandler/CustomError.js"; // Corrected path
-import MaterialUsageSchema from "./MaterialUsageModel.js"; // Updated path
+import CustomError from "../errorHandler/CustomError.js";
+import ERROR_CODES from "../constants/ErrorCodes.js";
+import MaterialUsageSchema from "./MaterialUsageModel.js";
 
 const routineTaskSchema = new mongoose.Schema(
   {
@@ -113,7 +114,13 @@ routineTaskSchema.pre("save", async function (next) {
       if (!user) {
         // This specific check is useful because the schema validator might just return false
         // without distinguishing between "user not found" and "user in wrong department".
-        return next(new CustomError("Performer user not found", 404));
+        return next(
+          new CustomError(
+            "Performer user not found",
+            404,
+            ERROR_CODES.USER_NOT_FOUND
+          )
+        );
       }
       // The schema-level validator on performedBy already checks department equality.
       // if (!user.department.equals(this.department)) {

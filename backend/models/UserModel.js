@@ -3,15 +3,16 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import mongoosePaginate from "mongoose-paginate-v2";
 import crypto from "crypto";
-import Department from "./DepartmentModel.js"; // Added for department updates
-import Company from "./CompanyModel.js"; // Added for company updates
-import Task from "./TaskModel.js"; // Added for task updates
-import AssignedTask from "./AssignedTaskModel.js"; // Added for task updates
-import RoutineTask from "./RoutineTaskModel.js"; // Added for task updates
-import TaskActivity from "./TaskActivityModel.js"; // Added for task updates
-import Notification from "./NotificationModel.js"; // Added for notification deletion
-import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js"; // Added for Cloudinary
-import CustomError from "../errorHandler/CustomError.js"; // For potential errors
+import Department from "./DepartmentModel.js";
+import Company from "./CompanyModel.js";
+import Task from "./TaskModel.js";
+import AssignedTask from "./AssignedTaskModel.js";
+import RoutineTask from "./RoutineTaskModel.js";
+import TaskActivity from "./TaskActivityModel.js";
+import Notification from "./NotificationModel.js";
+import { deleteFromCloudinary } from "../utils/cloudinaryHelper.js";
+import CustomError from "../errorHandler/CustomError.js";
+import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -66,16 +67,19 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isActive: { // This will now indicate if the user can log in, separate from being deleted
+    isActive: {
+      // This will now indicate if the user can log in, separate from being deleted
       type: Boolean,
       default: true,
     },
-    isDeleted: { // Soft delete flag
+    isDeleted: {
+      // Soft delete flag
       type: Boolean,
       default: false,
       index: true,
     },
-    deletedAt: { // Timestamp for soft delete
+    deletedAt: {
+      // Timestamp for soft delete
       type: Date,
     },
     pendingEmail: {
@@ -119,20 +123,20 @@ userSchema.index({ emailChangeTokenExpiry: 1 }, { expireAfterSeconds: 900 }); //
 userSchema.index({ resetPasswordExpiry: 1 }, { expireAfterSeconds: 3600 }); // 1 hour
 userSchema.index({ email: 1, isDeleted: 1 }); // To allow unique email only among non-deleted users potentially
 
-
 // Ensure that find queries by default only return non-deleted users
 // and also respect the isActive flag for general operations.
 // For specific cases (e.g. admin needing to see deleted users),
 // a separate method or query parameter can bypass this.
-userSchema.pre(/^find/, function(next) {
-  if (this.getOptions().withDeleted !== true) { // Allow overriding with an option
+userSchema.pre(/^find/, function (next) {
+  if (this.getOptions().withDeleted !== true) {
+    // Allow overriding with an option
     this.where({ isDeleted: { $ne: true } });
   }
   next();
 });
 
 // Prevent updates to soft-deleted users unless explicitly un-deleting
-userSchema.pre('findOneAndUpdate', async function(next) {
+userSchema.pre("findOneAndUpdate", async function (next) {
   // `this` is the query object
   const docToUpdate = await this.model.findOne(this.getQuery());
   if (docToUpdate && docToUpdate.isDeleted) {
@@ -140,13 +144,24 @@ userSchema.pre('findOneAndUpdate', async function(next) {
     // Allow update if it's specifically to change isDeleted or if withDeleted option is used
     // This logic might need refinement based on how undelete is handled.
     // For now, a simple check: if isDeleted is true, only allow un-deleting.
-    if (!(update && (update.$set && update.$set.isDeleted === false || update.isDeleted === false))) {
-        return next(new CustomError("Cannot update a deleted user account.", 403));
+    if (
+      !(
+        update &&
+        ((update.$set && update.$set.isDeleted === false) ||
+          update.isDeleted === false)
+      )
+    ) {
+      return next(
+        new CustomError(
+          "Cannot update a deleted user account.",
+          403,
+          ERROR_CODES.UNAUTHORIZED_ACCESS
+        )
+      );
     }
   }
   next();
 });
-
 
 // Virtuals
 userSchema.virtual("fullName").get(function () {
@@ -186,19 +201,19 @@ userSchema.pre("save", async function (next) {
 
 // Method to perform soft delete and cascade operations
 userSchema.methods.softDelete = async function (options = {}) {
-  const session = options.session || await mongoose.startSession(); // Start a new session if not provided
+  const session = options.session || (await mongoose.startSession()); // Start a new session if not provided
   const runInTransaction = async (transactionBody) => {
-    if (options.session) { // If session is passed, assume transaction is managed externally
-        return transactionBody(session);
+    if (options.session) {
+      // If session is passed, assume transaction is managed externally
+      return transactionBody(session);
     }
     // Otherwise, manage transaction internally
     let result;
     await session.withTransaction(async (sess) => {
-        result = await transactionBody(sess);
+      result = await transactionBody(sess);
     });
     return result;
   };
-
 
   return runInTransaction(async (currentSession) => {
     if (this.isDeleted) {
@@ -235,7 +250,9 @@ userSchema.methods.softDelete = async function (options = {}) {
     // but if it were, we'd need to iterate. For now, find company where this user is superAdmin.
     // This might be better handled by finding the company via the department or a direct link if exists.
     // For simplicity, let's assume a user is linked to one company via their department.
-    const departmentDoc = await Department.findById(this.department).session(currentSession);
+    const departmentDoc = await Department.findById(this.department).session(
+      currentSession
+    );
     if (departmentDoc && departmentDoc.company) {
       await Company.findByIdAndUpdate(
         departmentDoc.company,
@@ -250,11 +267,13 @@ userSchema.methods.softDelete = async function (options = {}) {
     // 4. Delete Profile Picture from Cloudinary
     if (this.profilePicture && this.profilePicture.public_id) {
       try {
-        await deleteFromCloudinary(this.profilePicture.public_id, 'image'); // Assuming it's an image
+        await deleteFromCloudinary(this.profilePicture.public_id, "image"); // Assuming it's an image
         this.profilePicture = undefined; // Clear from DB
       } catch (cloudinaryError) {
         // Log Cloudinary error, but don't let it stop the soft delete process
-        console.error(`Cloudinary deletion failed for user ${this._id}: ${cloudinaryError.message}`);
+        console.error(
+          `Cloudinary deletion failed for user ${this._id}: ${cloudinaryError.message}`
+        );
         // Decide if this should throw or just log. For soft delete, logging might be enough.
       }
     }
@@ -267,9 +286,10 @@ userSchema.methods.softDelete = async function (options = {}) {
       { $set: { createdBy: null } },
       { session: currentSession }
     );
-    await AssignedTask.updateMany( // AssignedTask is a discriminator of Task
-      { 'assignedTo': userIdToNullify },
-      { $pull: { 'assignedTo': userIdToNullify } },
+    await AssignedTask.updateMany(
+      // AssignedTask is a discriminator of Task
+      { assignedTo: userIdToNullify },
+      { $pull: { assignedTo: userIdToNullify } },
       { session: currentSession }
     );
     await RoutineTask.updateMany(
@@ -288,11 +308,12 @@ userSchema.methods.softDelete = async function (options = {}) {
   });
 };
 
-
 // Password comparison method
 userSchema.methods.matchPassword = async function (enteredPassword) {
   // Ensure password field is available if it was set to null
-  const userWithPassword = await this.constructor.findById(this._id).select("+password");
+  const userWithPassword = await this.constructor
+    .findById(this._id)
+    .select("+password");
   if (!userWithPassword || !userWithPassword.password) return false; // No password to compare
   return bcrypt.compare(enteredPassword, userWithPassword.password);
 };

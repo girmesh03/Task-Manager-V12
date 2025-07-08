@@ -4,7 +4,7 @@ import mongoosePaginate from "mongoose-paginate-v2";
 import Department from "./DepartmentModel.js";
 import User from "./UserModel.js";
 import CustomError from "../errorHandler/CustomError.js";
-import ERROR_CODES from "../constants/ErrorCodes.js"; // Import ERROR_CODES
+import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const companySchema = new mongoose.Schema(
   {

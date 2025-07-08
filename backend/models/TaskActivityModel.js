@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import CustomError from "../errorHandler/CustomError.js";
+import ERROR_CODES from "../constants/ErrorCodes.js";
 
 // Status transition rules
 const validTransitions = {
@@ -90,7 +91,7 @@ taskActivitySchema.pre("save", async function (next) {
       .session(session);
 
     if (!task) {
-      return next(new CustomError("Task not found", 404));
+      return next(new CustomError("Task not found", 404, ERROR_CODES.RESOURCE_NOT_FOUND));
     }
 
     // Validate that performer belongs to task department
@@ -101,7 +102,7 @@ taskActivitySchema.pre("save", async function (next) {
 
     if (!performer || !performer.department.equals(task.department)) {
       return next(
-        new CustomError("Performer must belong to task department", 400)
+        new CustomError("Performer must belong to task department", 400, ERROR_CODES.UNAUTHORIZED_ACCESS)
       );
     }
 
