@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import CustomError from "../errorHandler/CustomError.js"; // Corrected path
-import MaterialUsageSchema from "./schemas/MaterialUsageSchema.js";
+import MaterialUsageModel from "./schemas/MaterialUsageModel.js";
 
 const routineTaskSchema = new mongoose.Schema(
   {
@@ -18,7 +18,9 @@ const routineTaskSchema = new mongoose.Schema(
         validator: async function (userId) {
           const user = await mongoose.model("User").findById(userId);
           // Ensure user exists and their department matches this task's department
-          return user && user.department && user.department.equals(this.department);
+          return (
+            user && user.department && user.department.equals(this.department)
+          );
         },
         message: "Performer must belong to task department",
       },
@@ -79,7 +81,7 @@ const routineTaskSchema = new mongoose.Schema(
       },
     ],
     materialsUsed: {
-      type: [MaterialUsageSchema],
+      type: [MaterialUsageModel],
       default: [],
     },
   },

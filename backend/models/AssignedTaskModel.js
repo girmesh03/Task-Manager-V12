@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Task from "./TaskModel.js";
-import MaterialUsageSchema from "./schemas/MaterialUsageSchema.js";
+import MaterialUsageModel from "./schemas/MaterialUsageModel.js";
 
 const assignedTaskSchema = new mongoose.Schema(
   {
@@ -22,7 +22,11 @@ const assignedTaskSchema = new mongoose.Schema(
                 return false;
               }
               const user = await mongoose.model("User").findById(userId);
-              return user && user.department && user.department.equals(parentDoc.department);
+              return (
+                user &&
+                user.department &&
+                user.department.equals(parentDoc.department)
+              );
             },
             message: "User must belong to task department",
           },
@@ -34,7 +38,7 @@ const assignedTaskSchema = new mongoose.Schema(
       },
     },
     materialsUsed: {
-      type: [MaterialUsageSchema],
+      type: [MaterialUsageModel],
       default: [],
     },
   },
