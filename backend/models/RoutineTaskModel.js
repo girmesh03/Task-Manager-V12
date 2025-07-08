@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
-import CustomError from "../utils/customError.js";
+import CustomError from "../errorHandler/CustomError.js"; // Corrected path
+import MaterialUsageSchema from "./schemas/MaterialUsageSchema.js";
 
 const routineTaskSchema = new mongoose.Schema(
   {
@@ -16,7 +17,8 @@ const routineTaskSchema = new mongoose.Schema(
       validate: {
         validator: async function (userId) {
           const user = await mongoose.model("User").findById(userId);
-          return user?.department?.equals(this.department);
+          // Ensure user exists and their department matches this task's department
+          return user && user.department && user.department.equals(this.department);
         },
         message: "Performer must belong to task department",
       },
@@ -37,6 +39,7 @@ const routineTaskSchema = new mongoose.Schema(
     },
     performedTasks: [
       {
+        _id: false, // No separate _id for these sub-tasks
         description: {
           type: String,
           required: [true, "Routine Task description is required"],
@@ -75,6 +78,10 @@ const routineTaskSchema = new mongoose.Schema(
         },
       },
     ],
+    materialsUsed: {
+      type: [MaterialUsageSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -97,18 +104,21 @@ const routineTaskSchema = new mongoose.Schema(
 // Validate that performer belongs to the department and calculate progress
 routineTaskSchema.pre("save", async function (next) {
   try {
-    if (this.isModified("performedBy") || this.isModified("department")) {
+    // PerformedBy department validation is now handled by schema-level validate,
+    // but an explicit check here can provide a more specific error if user not found.
+    if (this.isModified("performedBy")) {
       const user = await mongoose.model("User").findById(this.performedBy);
-
       if (!user) {
+        // This specific check is useful because the schema validator might just return false
+        // without distinguishing between "user not found" and "user in wrong department".
         return next(new CustomError("Performer user not found", 404));
       }
-
-      if (!user.department.equals(this.department)) {
-        return next(
-          new CustomError("Performer must belong to task department", 400)
-        );
-      }
+      // The schema-level validator on performedBy already checks department equality.
+      // if (!user.department.equals(this.department)) {
+      //   return next(
+      //     new CustomError("Performer must belong to task department", 400)
+      //   );
+      // }
     }
 
     if (this.isModified("performedTasks")) {
