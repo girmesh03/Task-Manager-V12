@@ -3,6 +3,9 @@ import http from "http";
 import mongoose from "mongoose";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import { corsSocketOptions } from "./config/corsOptions.js";
+import setupSocketIO from "./socket.js";
+import { getIO } from "./utils/SocketInstance.js";
 
 const PORT = parseInt(process.env.PORT || "5000", 10);
 const HOST = process.env.HOST || "0.0.0.0";
@@ -12,7 +15,11 @@ const server = http.createServer(app);
 
 const startServer = async () => {
   try {
+    // Connect to MongoDB
     await connectDB();
+
+    // Initialize Socket.IO
+    setupSocketIO(server, corsSocketOptions);
 
     server.listen(PORT, HOST, () => {
       console.log(`🚀 Server running on http://${HOST}:${PORT}`);
@@ -34,6 +41,12 @@ const shutdown = async () => {
   console.log("🛑 Starting graceful shutdown...");
 
   try {
+    // Close Socket.IO first
+    if (getIO()) {
+      getIO().close();
+      console.log("Socket.IO server closed");
+    }
+
     // Close HTTP server
     const serverClosePromise = new Promise((resolve, reject) => {
       server.close((err) => {
@@ -80,3 +93,5 @@ process.on("unhandledRejection", (reason, promise) => {
 });
 
 startServer();
+
+export { getIO as io };
