@@ -2,9 +2,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import Department from "./DepartmentModel.js";
-import User from "./UserModel.js";
-import CustomError from "../errorHandler/CustomError.js";
-import ERROR_CODES from "../constants/ErrorCodes.js";
 
 const companySchema = new mongoose.Schema(
   {
@@ -85,14 +82,6 @@ const companySchema = new mongoose.Schema(
         ref: "Department",
       },
     ],
-    isDeleted: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
-    deletedAt: {
-      type: Date,
-    },
   },
   {
     timestamps: true,
@@ -114,66 +103,26 @@ const companySchema = new mongoose.Schema(
   }
 );
 
-// Ensure that find queries by default only return non-deleted companies
-companySchema.pre(/^find/, function(next) {
-  if (this.getOptions().withDeleted !== true) {
-    this.where({ isDeleted: { $ne: true } });
-  }
-  next();
-});
+// Cascade hard delete to all associated departments
+companySchema.pre("deleteOne", { document: true }, async function (next) {
+  const session = this.$session();
+  try {
+    if (this.departments && this.departments.length > 0) {
+      // Find all department documents to ensure we can call .deleteOne() on each
+      const departmentsToDelete = await Department.find({
+        _id: { $in: this.departments },
+      }).session(session);
 
-// Prevent updates to soft-deleted companies unless explicitly un-deleting
-companySchema.pre('findOneAndUpdate', async function(next) {
-  const docToUpdate = await this.model.findOne(this.getQuery());
-  if (docToUpdate && docToUpdate.isDeleted) {
-    const update = this.getUpdate();
-    if (!(update && (update.$set && update.$set.isDeleted === false || update.isDeleted === false))) {
-        return next(new CustomError("Cannot update a deleted company.", 403, ERROR_CODES.UNAUTHORIZED_ACCESS)); // Used ERROR_CODES
-    }
-  }
-  next();
-});
-
-// Method to perform soft delete
-companySchema.methods.softDelete = async function (options = {}) {
-  const session = options.session || await mongoose.startSession();
-  const runInTransaction = async (transactionBody) => {
-    if (options.session) {
-        return transactionBody(session);
-    }
-    let result;
-    await session.withTransaction(async (sess) => {
-        result = await transactionBody(sess);
-    });
-    return result;
-  };
-
-  return runInTransaction(async (currentSession) => {
-    if (this.isDeleted) {
-      throw new CustomError("Company is already deleted.", 400, ERROR_CODES.BAD_REQUEST); // Used ERROR_CODES
-    }
-
-    this.isDeleted = true;
-    this.deletedAt = new Date();
-
-    const departmentIds = this.departments;
-    if (departmentIds && departmentIds.length > 0) {
-      const departments = await Department.find({ _id: { $in: departmentIds } }).session(currentSession);
-      for (const department of departments) {
-        if (!department.isDeleted) {
-          await department.softDelete({ session: currentSession });
-        }
+      // Trigger pre-delete hooks for each department
+      for (const department of departmentsToDelete) {
+        await department.deleteOne({ session });
       }
     }
-
-    // SuperAdmin handling logic remains complex and tied to User model's soft delete.
-    // No direct error codes needed here unless specific checks fail.
-
-    await this.save({ session: currentSession });
-    return this;
-  });
-};
-
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Format name/address on save
 companySchema.pre("save", function (next) {

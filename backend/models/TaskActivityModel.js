@@ -1,3 +1,4 @@
+// backend/models/TaskActivityModel.js
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import CustomError from "../errorHandler/CustomError.js";
@@ -91,7 +92,9 @@ taskActivitySchema.pre("save", async function (next) {
       .session(session);
 
     if (!task) {
-      return next(new CustomError("Task not found", 404, ERROR_CODES.RESOURCE_NOT_FOUND));
+      return next(
+        new CustomError("Task not found", 404, ERROR_CODES.RESOURCE_NOT_FOUND)
+      );
     }
 
     // Validate that performer belongs to task department
@@ -102,7 +105,11 @@ taskActivitySchema.pre("save", async function (next) {
 
     if (!performer || !performer.department.equals(task.department)) {
       return next(
-        new CustomError("Performer must belong to task department", 400, ERROR_CODES.UNAUTHORIZED_ACCESS)
+        new CustomError(
+          "Performer must belong to task department",
+          400,
+          ERROR_CODES.UNAUTHORIZED_ACCESS
+        )
       );
     }
 
@@ -110,16 +117,6 @@ taskActivitySchema.pre("save", async function (next) {
       // Auto-fill 'from' status if not provided
       if (!this.statusChange.from) {
         this.statusChange.from = task.status;
-      }
-
-      // Validate current task status matches 'from' status
-      if (this.statusChange.from !== task.status) {
-        return next(
-          new CustomError(
-            "Status transition mismatch with current task status",
-            400
-          )
-        );
       }
 
       // Validate transition rules

@@ -1,4 +1,4 @@
-// backend/routes/AuthRoutes.js
+// backend/routes/authRoutes.js
 import express from "express";
 
 import {
@@ -12,18 +12,19 @@ import {
   validateLogin,
 } from "../middlewares/validators/authValidator.js";
 import { verifyJWT } from "../middlewares/authMiddleware.js";
+import authLimiter from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 // @route   POST /api/auth/register
 // @desc    Register a new user and create a company
 // @access  Public
-router.post("/register", validateRegister, registerUser);
+router.post("/register", authLimiter, validateRegister, registerUser);
 
 // @route   POST /api/auth/login
 // @desc    Authenticate user and get token
 // @access  Public
-router.post("/login", validateLogin, loginUser);
+router.post("/login", authLimiter, validateLogin, loginUser);
 
 // @route   DELETE /api/auth/logout
 // @desc    Logout user

@@ -1,3 +1,4 @@
+// backend/models/ProjectTaskModel.js
 import mongoose from "mongoose";
 import Task from "./TaskModel.js";
 
@@ -13,7 +14,6 @@ const projectTaskSchema = new mongoose.Schema(
         type: String,
         required: [true, "Client phone number is required"],
         trim: true,
-        unique: true,
         validate: {
           validator: function (v) {
             return /^(09\d{8}|\+2519\d{8})$/.test(v);

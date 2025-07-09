@@ -28,7 +28,7 @@ export const verifyJWT = (req, res, next) => {
     try {
       // Get user from database
       const user = await User.findById(decoded._id)
-        .select("+isVerified +isActive")
+        .select("+isVerified")
         .populate("department", "_id");
 
       // Check if user exists
@@ -38,17 +38,6 @@ export const verifyJWT = (req, res, next) => {
             "User account not found",
             404,
             ERROR_CODES.RESOURCE_NOT_FOUND
-          )
-        );
-      }
-
-      // Check if user is active
-      if (!user.isActive) {
-        return next(
-          new CustomError(
-            "Account not activated",
-            403,
-            ERROR_CODES.ACCOUNT_INACTIVE
           )
         );
       }
@@ -95,19 +84,10 @@ export const authorizeRoles = (...roles) => {
 
 export const verifyDepartmentAccess = async (req, res, next) => {
   const { departmentId } = req.params;
-  const userId = req.user._id;
 
   try {
-    const user = await User.findById(userId).select("department role");
-    if (!user)
-      throw new CustomError(
-        "User account not found",
-        404,
-        ERROR_CODES.RESOURCE_NOT_FOUND
-      );
-
     // SuperAdmin bypass
-    if (user.role === "SuperAdmin") return next();
+    if (req.user.role === "SuperAdmin") return next();
 
     // Check if user belongs to the department
     const department = await mongoose
@@ -120,7 +100,7 @@ export const verifyDepartmentAccess = async (req, res, next) => {
         ERROR_CODES.RESOURCE_NOT_FOUND
       );
 
-    if (!user.department.equals(departmentId)) {
+    if (!req.user.department.equals(departmentId)) {
       throw new CustomError(
         "Department access denied",
         403,

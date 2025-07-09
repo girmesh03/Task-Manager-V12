@@ -1,3 +1,4 @@
+// backend/models/TaskModel.js
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
@@ -30,26 +31,15 @@ const taskSchema = new mongoose.Schema(
       validate: {
         validator: function (value) {
           const due = new Date(value);
-          const now = new Date();
-
           if (this.isNew) {
-            // For new documents: due date must be in future
-            if (due <= now) {
-              throw new Error("Due date must be in the future.");
-            }
-          } else {
-            // For existing documents: due date must be after createdAt
-            if (due < this.createdAt) {
-              throw new Error(
-                "Due date must be on or after task creation date."
-              );
-            }
+            // For new documents, due date must be in the future.
+            return due > new Date();
           }
-          return true;
+          // For existing documents, due date must be on or after creation date.
+          return due >= this.createdAt;
         },
-        message: function (props) {
-          return props.reason.message; // Forward thrown error message
-        },
+        message:
+          "Due date must be in the future for new tasks and cannot be before the creation date for existing tasks.",
       },
     },
     priority: {

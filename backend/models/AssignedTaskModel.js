@@ -1,3 +1,4 @@
+// backend/models/AssignedTaskModel.js
 import mongoose from "mongoose";
 import Task from "./TaskModel.js";
 import MaterialUsageSchema from "./MaterialUsageModel.js";
@@ -12,20 +13,17 @@ const assignedTaskSchema = new mongoose.Schema(
           required: [true, "Assigned user is required"],
           validate: {
             validator: async function (userId) {
-              // Ensure parent document (Task) is available for department access
-              const parentDoc = this.parent();
-              if (!parentDoc || !parentDoc.department) {
+              // Get the parent document (the AssignedTask instance)
+              const taskDoc = this.parent().parent();
+              if (!taskDoc || !taskDoc.department) {
                 // This might happen if the task isn't fully constructed or department isn't set
-                // For now, assume department should be there if task creation is proceeding correctly.
-                // Returning false, but a more specific error might be better if this path is legitimately hit.
-                // console.warn("AssignedTask: Parent document or department not found during assignedTo validation.");
                 return false;
               }
               const user = await mongoose.model("User").findById(userId);
               return (
                 user &&
                 user.department &&
-                user.department.equals(parentDoc.department)
+                user.department.equals(taskDoc.department)
               );
             },
             message: "User must belong to task department",

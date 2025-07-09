@@ -1,3 +1,4 @@
+// backend/models/NotificationModel.js
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
@@ -49,7 +50,7 @@ const notificationSchema = new mongoose.Schema(
           );
         },
         message:
-          "Notification Linked document is required when type is TaskAssignment, TaskUpdate, or StatusChange.",
+          "A linked document is required for notifications of type TaskAssignment, TaskUpdate, or StatusChange.",
       },
     },
     linkedDocumentType: {
@@ -61,7 +62,7 @@ const notificationSchema = new mongoose.Schema(
           return !this.linkedDocument || !!value;
         },
         message:
-          "Notification Linked document is required if linkedDocument is provided.",
+          "A `linkedDocumentType` is required when a `linkedDocument` is provided.",
       },
     },
     isRead: {

@@ -2,9 +2,9 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import Company from "./CompanyModel.js"; // For company updates
-import User from "./UserModel.js"; // For User checks
-import CustomError from "../errorHandler/CustomError.js";
-import ERROR_CODES from "../constants/ErrorCodes.js"; // Import ERROR_CODES
+import User from "./UserModel.js";
+import Task from "./TaskModel.js";
+import RoutineTask from "./RoutineTaskModel.js";
 
 const departmentSchema = new mongoose.Schema(
   {
@@ -32,14 +32,6 @@ const departmentSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    isDeleted: {
-      type: Boolean,
-      default: false,
-      index: true,
-    },
-    deletedAt: {
-      type: Date,
-    },
   },
   {
     timestamps: true,
@@ -61,100 +53,42 @@ const departmentSchema = new mongoose.Schema(
   }
 );
 
-// Ensure that find queries by default only return non-deleted departments
-departmentSchema.pre(/^find/, function (next) {
-  if (this.getOptions().withDeleted !== true) {
-    this.where({ isDeleted: { $ne: true } });
-  }
-  next();
-});
+// Cascade hard delete to users and tasks within the department
+departmentSchema.pre("deleteOne", { document: true }, async function (next) {
+  const session = this.$session();
+  try {
+    // 1. Delete all users in this department
+    if (this.members && this.members.length > 0) {
+      const usersInDept = await User.find({
+        _id: { $in: this.members },
+      }).session(session);
 
-// Prevent updates to soft-deleted departments unless explicitly un-deleting
-departmentSchema.pre("findOneAndUpdate", async function (next) {
-  const docToUpdate = await this.model.findOne(this.getQuery());
-  if (docToUpdate && docToUpdate.isDeleted) {
-    const update = this.getUpdate();
-    if (
-      !(
-        update &&
-        ((update.$set && update.$set.isDeleted === false) ||
-          update.isDeleted === false)
-      )
-    ) {
-      return next(
-        new CustomError(
-          "Cannot update a deleted department.",
-          403,
-          ERROR_CODES.UNAUTHORIZED_ACCESS
-        )
-      ); // Used ERROR_CODES
-    }
-  }
-  next();
-});
-
-// Virtuals
-departmentSchema.virtual("activeMembersCount").get(async function () {
-  if (!this.populated("members")) {
-    const count = await mongoose
-      .model("User")
-      .countDocuments({ department: this._id, isDeleted: false });
-    return count;
-  }
-  return this.members.filter((member) => member && !member.isDeleted).length;
-});
-
-// Method to perform soft delete
-departmentSchema.methods.softDelete = async function (options = {}) {
-  const session = options.session || (await mongoose.startSession());
-  const runInTransaction = async (transactionBody) => {
-    if (options.session) {
-      return transactionBody(session);
-    }
-    let result;
-    await session.withTransaction(async (sess) => {
-      result = await transactionBody(sess);
-    });
-    return result;
-  };
-
-  return runInTransaction(async (currentSession) => {
-    if (this.isDeleted) {
-      throw new CustomError(
-        "Department is already deleted.",
-        400,
-        ERROR_CODES.BAD_REQUEST
-      ); // Used ERROR_CODES
+      // Trigger pre-delete hooks for each user to cascade further
+      for (const user of usersInDept) {
+        await user.deleteOne({ session });
+      }
     }
 
-    const activeMemberCount = await User.countDocuments({
-      department: this._id,
-      isDeleted: { $ne: true },
-    }).session(currentSession);
+    // 2. Delete all tasks and routine tasks belonging to this department
+    await Promise.all([
+      Task.deleteMany({ department: this._id }).session(session),
+      RoutineTask.deleteMany({ department: this._id }).session(session),
+    ]);
 
-    if (activeMemberCount > 0) {
-      throw new CustomError(
-        `Cannot delete department: ${activeMemberCount} active user(s) still belong to this department. Please reassign them first.`,
-        400,
-        ERROR_CODES.OPERATION_FAILED // Used ERROR_CODES
-      );
-    }
-
-    this.isDeleted = true;
-    this.deletedAt = new Date();
-
+    // 3. Remove this department's reference from its parent company
     if (this.company) {
       await Company.findByIdAndUpdate(
         this.company,
         { $pull: { departments: this._id } },
-        { session: currentSession }
+        { session }
       );
     }
 
-    await this.save({ session: currentSession });
-    return this;
-  });
-};
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Format name/description on save
 departmentSchema.pre("save", function (next) {

@@ -1,3 +1,4 @@
+// backend/socket.js
 import jwt from "jsonwebtoken";
 import User from "./models/UserModel.js";
 import { Server as SocketIOServer } from "socket.io";
@@ -27,9 +28,7 @@ const socketAuth = async (socket, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    const user = await User.findById(decoded._id).select(
-      "+isVerified +isActive +tokenVersion"
-    );
+    const user = await User.findById(decoded._id).select("+isVerified");
 
     if (!user)
       return next(
@@ -39,7 +38,7 @@ const socketAuth = async (socket, next) => {
           ERROR_CODES.RESOURCE_NOT_FOUND
         )
       );
-    if (!user.isVerified || !user.isActive)
+    if (!user.isVerified)
       return next(
         new CustomError(
           "Account not activated or suspended",
@@ -48,14 +47,11 @@ const socketAuth = async (socket, next) => {
         )
       );
 
-    // socket.user = {
-    //   _id: user._id,
-    //   role: user.role,
-    //   department: user.department,
-    //   tokenVersion: user.tokenVersion,
-    // };
-
-    socket.user = decoded;
+    socket.user = {
+      _id: user._id,
+      role: user.role,
+      department: user.department,
+    };
 
     next();
   } catch (error) {
@@ -88,7 +84,7 @@ const setupSocketIO = (server, corsSocketOptions) => {
 
       // Non-blocking room join
       setTimeout(() => {
-        joinDepartmentRooms(socket.user._id).catch((err) =>
+        joinDepartmentRooms(socket).catch((err) =>
           console.error(`Room join error: ${err.message}`)
         );
       }, 0);

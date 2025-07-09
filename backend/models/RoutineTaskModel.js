@@ -1,3 +1,4 @@
+// backend/models/RoutineTaskModel.js
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 import CustomError from "../errorHandler/CustomError.js";
@@ -107,28 +108,7 @@ const routineTaskSchema = new mongoose.Schema(
 // Validate that performer belongs to the department and calculate progress
 routineTaskSchema.pre("save", async function (next) {
   try {
-    // PerformedBy department validation is now handled by schema-level validate,
-    // but an explicit check here can provide a more specific error if user not found.
-    if (this.isModified("performedBy")) {
-      const user = await mongoose.model("User").findById(this.performedBy);
-      if (!user) {
-        // This specific check is useful because the schema validator might just return false
-        // without distinguishing between "user not found" and "user in wrong department".
-        return next(
-          new CustomError(
-            "Performer user not found",
-            404,
-            ERROR_CODES.USER_NOT_FOUND
-          )
-        );
-      }
-      // The schema-level validator on performedBy already checks department equality.
-      // if (!user.department.equals(this.department)) {
-      //   return next(
-      //     new CustomError("Performer must belong to task department", 400)
-      //   );
-      // }
-    }
+    // PerformedBy department validation is now handled by schema-level validate.
 
     if (this.isModified("performedTasks")) {
       const total = this.performedTasks.length;
